@@ -3,7 +3,7 @@
 react-layered-image is an interactive, multi-layer image component for
 [React](https://reactjs.org/).
 
-# Installation
+## Installation
 
 ## Example
 
