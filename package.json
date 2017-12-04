@@ -14,13 +14,8 @@
     "dev": "webpack-dev-server --open --config webpack.dev.js",
     "test": "echo \"Error: no test specified\" && exit 0",
     "build": "webpack --config webpack.prod.js",
-    "release": "./node_modules/.bin/semantic-release pre && npm publish && ./node_modules/.bin/semantic-release post"
-  },
-  "release": {
-    "verifyConditions": [
-      "@semantic-release/github",
-      "@semantic-release/npm"
-    ]
+    "release": "./node_modules/.bin/semantic-release pre && npm publish && ./node_modules/.bin/semantic-release post",
+    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "repository": {
     "type": "git",
