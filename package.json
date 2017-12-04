@@ -14,6 +14,7 @@
     "dev": "webpack-dev-server --open --config webpack.dev.js",
     "test": "echo \"Error: no test specified\" && exit 0",
     "build": "webpack --config webpack.prod.js",
+    "push": "npm run build && git push",
     "semantic-release": "./node_modules/.bin/semantic-release",
     "release": "npm run semantic-release pre && npm publish && npm run semantic-release post"
   },
