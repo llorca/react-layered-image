@@ -14,4 +14,4 @@ react-layered-image is an interactive, multi-layer image component for
 
 ## License
 
-react-layered-image is [MIT licensed](./LICENSE).
+[MIT](./LICENSE)

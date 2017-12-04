@@ -2,8 +2,7 @@
 /node_modules
 
 # Production
-/**/*.js
-/**/*.js.map
+lib/**/*.js
 
 # Misc
 .DS_Store
