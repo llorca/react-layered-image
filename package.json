@@ -15,7 +15,7 @@
     "test": "echo \"Error: no test specified\" && exit 0",
     "build": "webpack --config webpack.prod.js",
     "semantic-release": "./node_modules/.bin/semantic-release",
-    "release": "npm run build && npm run semantic-release pre && npm publish && npm run semantic-release post"
+    "release": "npm run semantic-release pre && npm publish && npm run semantic-release post"
   },
   "repository": {
     "type": "git",
