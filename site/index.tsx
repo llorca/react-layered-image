@@ -20,7 +20,7 @@ const style: React.CSSProperties = {
 render(
   <div style={style}>
     <LayeredImage
-      layers={[1, 2, 3].map(index => `/static/images/dazzle-layer-${index}.png`)}
+      layers={[1, 2, 3].map(index => `./static/images/dazzle-layer-${index}.png`)}
       aspectRatio={0.6}
       borderRadius={8}
       lightOpacity={0.25}

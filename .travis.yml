@@ -12,6 +12,13 @@ script:
   - npm run build
 after_success:
   - npm run release
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GH_TOKEN
+  local_dir: ./site/build
+  on:
+    branch: master
 branches:
   except:
     - /^v\d+\.\d+\.\d+$/
