@@ -5,18 +5,18 @@
   "author": "Antoine Llorca",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
-    "commitmsg": "./node_modules/.bin/commitlint -e $GIT_PARAMS",
-    "commit": "./node_modules/.bin/git-cz",
     "dev": "webpack-dev-server --open --config webpack.dev.js",
+    "watch": "webpack --watch --config webpack.dev.js",
+    "start": "concurrently \"npm run dev\" \"npm run watch\"",
     "test": "echo \"Error: no test specified\" && exit 0",
-    "build": "webpack --config webpack.prod.js",
-    "push": "npm run build && git push",
-    "semantic-release": "./node_modules/.bin/semantic-release",
-    "release": "npm run semantic-release pre && npm publish && npm run semantic-release post"
+    "build:site": "webpack --config webpack.dev.js",
+    "build:dist": "webpack --config webpack.prod.js",
+    "build": "npm run build:dist && npm run build:site",
+    "commitmsg": "commitlint -e $GIT_PARAMS",
+    "commit": "git-cz",
+    "release": "semantic-release pre && npm publish && semantic-release post"
   },
   "repository": {
     "type": "git",
@@ -41,6 +41,7 @@
     "awesome-typescript-loader": "^3.4.1",
     "clean-webpack-plugin": "^0.1.17",
     "commitizen": "^2.9.6",
+    "concurrently": "^3.5.1",
     "copy-webpack-plugin": "^4.2.3",
     "cz-conventional-changelog": "^2.1.0",
     "husky": "^0.14.3",
@@ -52,7 +53,6 @@
     "typescript": "^2.6.2",
     "typestyle": "^1.5.1",
     "webpack": "^3.9.1",
-    "webpack-dev-middleware": "^1.12.2",
     "webpack-dev-server": "^2.9.5",
     "webpack-merge": "^4.1.1"
   },
