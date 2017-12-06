@@ -1,8 +1,7 @@
 import * as React from "react";
 import { render } from "react-dom";
 
-import LayeredImage from "./build/bundle";
-// import LayeredImage from "../dist";
+import LayeredImage from "../lib";
 
 const style: React.CSSProperties = {
   position: "absolute",
@@ -22,7 +21,6 @@ render(
     <LayeredImage
       layers={[1, 2, 3].map(index => `./static/images/dazzle-layer-${index}.png`)}
       aspectRatio={0.6}
-      borderRadius={8}
       lightOpacity={0.25}
       shadowColor="#1f2933"
       shadowOpacity={0.55}
