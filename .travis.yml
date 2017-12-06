@@ -16,7 +16,7 @@ deploy:
   provider: pages
   skip_cleanup: true
   github_token: $GH_TOKEN
-  local_dir: ./site/build
+  local_dir: ./example/build
   on:
     branch: master
 branches:
