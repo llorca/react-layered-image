@@ -11,7 +11,7 @@
     "test": "echo \"Error: no test specified\" && exit 0",
     "build:example": "webpack --config webpack.dev.js",
     "build:dist": "webpack --config webpack.prod.js",
-    "build": "npm run build:dist && npm run build:site",
+    "build": "npm run build:dist && npm run build:example",
     "commitmsg": "commitlint -e $GIT_PARAMS",
     "commit": "git-cz",
     "release": "semantic-release pre && npm publish && semantic-release post"
