@@ -1,18 +1,19 @@
 import * as React from "react";
-import * as TypeStyle from "typestyle";
+import { classes as classNames } from "typestyle";
 
+import { default as classes } from "./classes";
 import { clamp, isFunction } from "./utils";
 
 export enum Interaction {
   None = "NONE",
+  Resize = "RESIZE",
   Hover = "HOVER",
   Active = "ACTIVE",
-  Resize = "RESIZE",
 }
 
 export interface ILayeredImageProps extends React.HTMLProps<HTMLDivElement> {
   layers: Array<string>;
-  aspectRatio: number;
+  aspectRatio?: number;
   borderRadius?: React.CSSProperties["borderRadius"];
   transitionDuration?: React.CSSProperties["transitionDuration"];
   transitionTimingFunction?: React.CSSProperties["transitionTimingFunction"];
@@ -41,14 +42,14 @@ interface ILayeredImageStyles {
 
 export default class LayeredImage extends React.Component<ILayeredImageProps, ILayeredImageState> {
   public static defaultProps: Partial<ILayeredImageProps> = {
-    aspectRatio: 0.75,
-    borderRadius: 5,
+    aspectRatio: 16 / 10,
+    borderRadius: 6,
     transitionDuration: 0.2,
     transitionTimingFunction: "ease-out",
     lightColor: "#fff",
-    lightOpacity: 0.1,
+    lightOpacity: 0.2,
     shadowColor: "#000",
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.6,
   };
 
   public state: ILayeredImageState = {
@@ -89,33 +90,37 @@ export default class LayeredImage extends React.Component<ILayeredImageProps, IL
       style,
     } = this.props;
     const { width, loaded } = this.state;
+    const staticStyles = this.getStaticStyles();
     const styles: ILayeredImageStyles = {
       root: {
-        borderRadius: borderRadius,
+        borderRadius,
         transform: `perspective(${width * 3}px)`,
+        ...staticStyles.root,
       },
       container: {
-        borderRadius: borderRadius,
-        transition: `transform ${transitionDuration}s ${transitionTimingFunction}`,
+        borderRadius,
+        transitionTimingFunction,
+        ...staticStyles.container,
       },
       layers: {
-        borderRadius: borderRadius,
+        borderRadius,
+        ...staticStyles.layers,
       },
       layer: {
-        transition: `transform ${transitionDuration}s ${transitionTimingFunction},
-                     opacity ${transitionDuration * 3}s ${transitionTimingFunction}`,
+        transitionDuration: `${transitionDuration}s, ${transitionDuration * 3}s`,
+        transitionTimingFunction,
+        ...staticStyles.layer,
       },
       light: {
-        borderRadius: borderRadius,
-        backgroundImage: `linear-gradient(180deg, ${lightColor} 0%, transparent 80%)`,
+        borderRadius,
         opacity: lightOpacity,
+        ...staticStyles.light,
       },
       shadow: {
-        borderRadius: borderRadius * 2,
-        boxShadow: `0 8px 20px ${shadowColor}, 0 2px 4px ${shadowColor}`,
+        borderRadius,
         opacity: shadowOpacity,
-        transition: `box-shadow ${transitionDuration}s ${transitionTimingFunction},
-                     opacity ${transitionDuration}s ${transitionTimingFunction}`,
+        transitionTimingFunction,
+        ...staticStyles.shadow,
       },
     };
 
@@ -129,7 +134,7 @@ export default class LayeredImage extends React.Component<ILayeredImageProps, IL
         onTouchStart={this.handleTouchInteraction(Interaction.Hover)}
         onTouchMove={this.handleTouchInteraction(Interaction.Hover)}
         onTouchEnd={this.handleInteractionEnd}
-        className={TypeStyle.classes(classes.root, className)}
+        className={classNames(classes.root, className)}
         style={{ ...styles.root, ...style }}
         ref={this.refHandlers.root}
       >
@@ -211,9 +216,30 @@ export default class LayeredImage extends React.Component<ILayeredImageProps, IL
       this.elements.container.offsetWidth ||
       this.elements.container.clientWidth ||
       this.elements.container.scrollWidth;
-    const height = Math.round(width * aspectRatio);
+    const height = Math.round(width / aspectRatio);
 
     return { width, height };
+  };
+
+  private getStaticStyles = (): ILayeredImageStyles => {
+    const { transitionDuration, lightColor, shadowColor } = this.props;
+
+    return {
+      container: {
+        transform: "none",
+        transitionDuration: `${transitionDuration}s`,
+      },
+      layer: {
+        transform: "none",
+      },
+      light: {
+        backgroundImage: `linear-gradient(180deg, ${lightColor} 0%, transparent 80%)`,
+      },
+      shadow: {
+        boxShadow: `0 10px 30px ${shadowColor}, 0 6px 10px ${shadowColor}`,
+        transitionDuration: `${transitionDuration}s`,
+      },
+    };
   };
 
   private computeStyles = (
@@ -229,6 +255,7 @@ export default class LayeredImage extends React.Component<ILayeredImageProps, IL
     const { interaction = this.state.interaction, aspectRatio } = options;
     const { layers, transitionDuration, lightColor, shadowColor } = this.props;
     const { width, height } = interaction === Interaction.Resize ? this.getDimensions(aspectRatio) : this.state;
+    const staticStyles = this.getStaticStyles();
 
     const bodyScrollTop =
       document.body.scrollTop ||
@@ -251,26 +278,14 @@ export default class LayeredImage extends React.Component<ILayeredImageProps, IL
     const lightAngle = Math.atan2(containerCenterY, containerCenterX) * 180 / Math.PI - 90;
 
     const computedStyles: ILayeredImageStyles = {
-      [Interaction.None]: {
-        container: {
-          transform: "none",
-          transitionDuration: `${transitionDuration}s`,
-        },
-        layer: {
-          transform: "none",
-        },
-        light: {
-          backgroundImage: `linear-gradient(180deg, ${lightColor} 0%, transparent 80%)`,
-        },
-        shadow: {
-          boxShadow: `0 8px 20px ${shadowColor}, 0 2px 4px ${shadowColor}`,
-          transitionDuration: `${transitionDuration}s`,
-        },
-      },
+      [Interaction.None]: { ...staticStyles },
+      [Interaction.Resize]: { root: { height: `${height}px` } },
       [Interaction.Hover]: {
         container: {
           transform: `rotateX(${-clamp(containerRotationX, -8, 8)}deg)
                       rotateY(${-clamp(containerRotationY, -8, 8)}deg)
+                      translateX(${-layerTranslationX * 6}px)
+                      translateY(${-layerTranslationY * 6}px)
                       scale(1.1)`,
         },
         layer: (index: number) => ({
@@ -301,13 +316,8 @@ export default class LayeredImage extends React.Component<ILayeredImageProps, IL
           backgroundImage: `linear-gradient(${lightAngle}deg, ${lightColor} 0%, transparent 80%)`,
         },
         shadow: {
-          boxShadow: `0 8px 20px ${shadowColor}, 0 2px 4px ${shadowColor}`,
+          ...staticStyles.shadow,
           transitionDuration: "0.075s",
-        },
-      },
-      [Interaction.Resize]: {
-        root: {
-          height: `${height}px`,
         },
       },
     }[interaction];
@@ -339,49 +349,3 @@ export default class LayeredImage extends React.Component<ILayeredImageProps, IL
     });
   };
 }
-
-const classes = {
-  root: TypeStyle.style({
-    position: "relative",
-    width: "100%",
-    transformStyle: "preserve-3d",
-    cursor: "pointer",
-    "-webkit-tap-highlight-color": "rgba(0, 0, 0, 0)",
-  }),
-  container: TypeStyle.style({
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    transformStyle: "preserve-3d",
-  }),
-  layers: TypeStyle.style({
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    transformStyle: "preserve-3d",
-    overflow: "hidden",
-    background: "black",
-  }),
-  layer: TypeStyle.style({
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    backgroundRepeat: "no-repeat",
-    backgroundPosition: "center",
-    backgroundColor: "transparent",
-    backgroundSize: "cover",
-    opacity: 0,
-  }),
-  light: TypeStyle.style({
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-  }),
-  shadow: TypeStyle.style({
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    transform: "translateZ(-10px) scale(0.98)",
-    transitionProperty: "transform, box-shadow",
-  }),
-};

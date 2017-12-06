@@ -20,10 +20,7 @@ render(
   <div style={style}>
     <LayeredImage
       layers={[1, 2, 3].map(index => `./static/images/dazzle-layer-${index}.png`)}
-      aspectRatio={0.6}
-      lightOpacity={0.25}
       shadowColor="#1f2933"
-      shadowOpacity={0.55}
       style={{ width: 400 }}
     />
   </div>,
