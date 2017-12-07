@@ -7,7 +7,6 @@
 #### Features
 
 * Runs at 60fps on Chrome 54+, Firefox 49+, Safari 6.1+, Mobile Safari 6.1+
-* Defines size with CSS `width`, i.e. `style={{ width: ... }}`
 * Preserves aspect ratio through resizing
 * Loads images asynchronously
 
@@ -17,7 +16,7 @@
 npm install react-layered-image
 ```
 
-## Example
+## Basic example
 
 ```js
 import * as React from "react";
@@ -31,16 +30,20 @@ const style = {
   right: 0,
   bottom: 0,
   left: 0,
-  padding: 30,
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
-  backgroundColor: "#e1e8ed",
 };
+
+const layers = [
+  "https://llorca.github.io/react-layered-image/static/images/layer-1.png",
+  "https://llorca.github.io/react-layered-image/static/images/layer-2.png",
+  "https://llorca.github.io/react-layered-image/static/images/layer-3.png",
+];
 
 render(
   <div style={style}>
-    <LayeredImage layers={["array", "of", "image paths"]} style={{ width: 400 }} />
+    <LayeredImage layers={layers} style={{ width: 400 }} />
   </div>,
   document.getElementById("root"),
 );
@@ -48,17 +51,35 @@ render(
 
 ## API
 
-| Prop                                      | Type            | Description                                                                           |
-| ----------------------------------------- | --------------- | ------------------------------------------------------------------------------------- |
-| `layers`                                  | `Array<string>` | **Required**. Array of image URLs. It is recommended to use images of same dimension. |
-| `aspectRatio` _= 16 / 10_                 | `number`        | Aspect ratio (`width / height`) of the layered image.                                 |
-| `borderRadius` _= 6_                      | `number`        | Radius of the layered image.                                                          |
-| `transitionDuration` _= 0.2_              | `number`        | Duration of the transition.                                                           |
-| `transitionTimingFunction` _= "ease-out"_ | `string`        | Timing function of the transition.                                                    |
-| `lightColor` _= "#fff"_                   | `string`        | Color of the light element.                                                           |
-| `lightOpacity` _= 0.1_                    | `number`        | Opacity of the light element.                                                         |
-| `shadowColor` _= "#000"_                  | `string`        | Color of the shadow element.                                                          |
-| `shadowOpacity` _= 0.6_                   | `number`        | Opacity of the shadow element.                                                        |
+By default, `LayeredImage` has a width of `100%`. You can set the CSS
+[`width`](https://developer.mozilla.org/en-US/docs/Web/CSS/width) property via a class name or via the `style` prop
+directly. You can use any length or percentage value.
+
+| Prop                       | Type            | Default      | Description                                                                       |
+| -------------------------- | --------------- | ------------ | --------------------------------------------------------------------------------- |
+| `layers`                   | `Array<string>` |              | **Required**. Array of image URLs. Use images of same dimension for best results. |
+| `aspectRatio`              | `number`        | `16 / 9`     | Aspect ratio (`width / height`) of the element.                                   |
+| `borderRadius`             | `number`        | `6`          | Radius of the element.                                                            |
+| `transitionDuration`       | `number`        | `0.2`        | Duration of the transition.                                                       |
+| `transitionTimingFunction` | `string`        | `"ease-out"` | Timing function of the transition.                                                |
+| `lightColor`               | `string`        | `"#fff"`     | Color of the light element.                                                       |
+| `lightOpacity`             | `number`        | `0.2`        | Opacity of the light element.                                                     |
+| `shadowColor`              | `string`        | `"#000"`     | Color of the shadow element.                                                      |
+| `shadowOpacity`            | `number`        | `0.6`        | Opacity of the shadow element.                                                    |
+
+## Development
+
+Start the [webpack](https://github.com/webpack/webpack) development server:
+
+```
+npm run dev
+```
+
+Use [Commitizen](https://github.com/commitizen/cz-cli) to commit changes:
+
+```
+npm run commit
+```
 
 ## License
 
