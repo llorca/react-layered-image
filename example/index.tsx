@@ -19,7 +19,7 @@ const style: React.CSSProperties = {
 render(
   <div style={style}>
     <LayeredImage
-      layers={[1, 2, 3].map(index => `./static/images/dazzle-layer-${index}.png`)}
+      layers={[1, 2, 3].map(index => `./static/images/layer-${index}.png`)}
       shadowColor="#1f2933"
       style={{ width: 400 }}
     />

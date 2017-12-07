@@ -1,7 +1,6 @@
+const path = require("path");
 const webpack = require("webpack");
 const merge = require("webpack-merge");
-const path = require("path");
-
 const CleanWebpackPlugin = require("clean-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const UglifyJSPlugin = require("uglifyjs-webpack-plugin");

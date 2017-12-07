@@ -1,6 +1,5 @@
-const merge = require("webpack-merge");
 const path = require("path");
-
+const merge = require("webpack-merge");
 const CleanWebpackPlugin = require("clean-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 
@@ -20,13 +19,15 @@ module.exports = merge(common, {
   },
   plugins: [
     new CleanWebpackPlugin(["example/build"]),
-    // prettier-ignore
-    new CopyWebpackPlugin([{
-      from: "./example/index.html",
+    new CopyWebpackPlugin([
+      {
+        from: "./example/index.html",
         to: "./index.html",
-    }, {
-      from: "./example/static/",
+      },
+      {
+        from: "./example/static/",
         to: "./static/",
-    }]),
+      },
+    ]),
   ],
 });
