@@ -284,13 +284,13 @@ export default class LayeredImage extends React.Component<ILayeredImageProps, IL
         container: {
           transform: `rotateX(${-clamp(containerRotationX, -8, 8)}deg)
                       rotateY(${-clamp(containerRotationY, -8, 8)}deg)
-                      translateX(${-layerTranslationX * 6}px)
-                      translateY(${-layerTranslationY * 6}px)
+                      translateX(${-layerTranslationX * 5}px)
+                      translateY(${-layerTranslationY * 5}px)
                       scale(1.1)`,
         },
         layer: (index: number) => ({
-          transform: `translateX(${clamp(layerTranslationX, -2, 2) * index * 2}px)
-                      translateY(${clamp(layerTranslationY, -2, 2) * index * 2}px)
+          transform: `translateX(${clamp(layerTranslationX, -2, 2) * 1.4 * index}px)
+                      translateY(${clamp(layerTranslationY, -2, 2) * 1.4 * index}px)
                       scale(1.04)`,
         }),
         light: {
