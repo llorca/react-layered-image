@@ -1,11 +1,23 @@
-export function clamp(value: number, min: number, max: number) {
-  if (max < min) {
-    throw new Error("clamp: max cannot be less than min");
-  }
+/**
+ * Clamp the `value` between `min` and `max` inclusively.
+ */
+export const clamp = (value: number, min: number, max: number) => {
+  const maximum = max < min ? min : max
 
-  return value != null ? Math.min(Math.max(value, min), max) : value;
+  return value != null ? Math.min(Math.max(value, min), maximum) : value
 }
 
-export function isFunction(value: any): value is Function {
-  return typeof value === "function";
+/**
+ * Return `true` if the value is a `function`.
+ */
+// eslint-disable-next-line @typescript-eslint/ban-types
+export const isFunction = (value: unknown): value is Function => typeof value === "function"
+
+/**
+ * Detect whether the current browser is a desktop version of Safari.
+ */
+export const isSafariDesktop = () => {
+  const { userAgent, vendor } = navigator
+
+  return /Safari/i.test(userAgent) && /Apple Computer/.test(vendor) && !/Mobi|Android/i.test(userAgent)
 }

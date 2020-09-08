@@ -1,11 +1,12 @@
-const path = require("path");
-const merge = require("webpack-merge");
-const CleanWebpackPlugin = require("clean-webpack-plugin");
-const CopyWebpackPlugin = require("copy-webpack-plugin");
+const path = require("path")
+const { CleanWebpackPlugin } = require("clean-webpack-plugin")
+const CopyWebpackPlugin = require("copy-webpack-plugin")
 
-const common = require("./webpack.common.js");
+const common = require("./webpack.common.js")
 
-module.exports = merge(common, {
+module.exports = {
+  ...common,
+  mode: "development",
   entry: "./example/index.tsx",
   output: {
     path: path.resolve(__dirname, "./example/build"),
@@ -13,21 +14,26 @@ module.exports = merge(common, {
     library: "react-layered-image",
     libraryTarget: "umd",
   },
-  devtool: "eval",
   devServer: {
     contentBase: "./example/build",
+    host: "0.0.0.0",
+    port: 8080,
   },
   plugins: [
-    new CleanWebpackPlugin(["example/build"]),
-    new CopyWebpackPlugin([
-      {
-        from: "./example/index.html",
-        to: "./index.html",
-      },
-      {
-        from: "./example/static/",
-        to: "./static/",
-      },
-    ]),
+    new CleanWebpackPlugin({
+      cleanAfterEveryBuildPatterns: ["example/build"],
+    }),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: "./example/index.html",
+          to: "./index.html",
+        },
+        {
+          from: "./example/static/",
+          to: "./static/",
+        },
+      ],
+    }),
   ],
-});
+}

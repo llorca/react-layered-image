@@ -1,13 +1,14 @@
-const path = require("path");
-const webpack = require("webpack");
-const merge = require("webpack-merge");
-const CleanWebpackPlugin = require("clean-webpack-plugin");
-const CopyWebpackPlugin = require("copy-webpack-plugin");
-const UglifyJSPlugin = require("uglifyjs-webpack-plugin");
+const path = require("path")
+const webpack = require("webpack")
+const { CleanWebpackPlugin } = require("clean-webpack-plugin")
+const CopyWebpackPlugin = require("copy-webpack-plugin")
+const UglifyJSPlugin = require("uglifyjs-webpack-plugin")
 
-const common = require("./webpack.common.js");
+const common = require("./webpack.common.js")
 
-module.exports = merge(common, {
+module.exports = {
+  ...common,
+  mode: "production",
   entry: "./lib/index.ts",
   output: {
     path: path.resolve(__dirname, "dist"),
@@ -21,17 +22,19 @@ module.exports = merge(common, {
   },
   plugins: [
     new CleanWebpackPlugin(["dist"]),
-    new CopyWebpackPlugin([
-      {
-        from: "types/LayeredImage.d.ts",
-        to: "index.d.ts",
-      },
-    ]),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: "types/LayeredImage.d.ts",
+          to: "index.d.ts",
+        },
+      ],
+    }),
     new UglifyJSPlugin({
       sourceMap: true,
     }),
     new webpack.DefinePlugin({
-      "process.env.NODE_ENV": JSON.stringify("production"),
+      "process.env.NODE_ENV": '"production"',
     }),
   ],
-});
+}

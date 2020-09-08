@@ -1,0 +1,72 @@
+{
+  "env": {
+    "browser": true,
+    "es6": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:import/recommended",
+    "plugin:import/typescript",
+    "plugin:@typescript-eslint/recommended",
+    "prettier/@typescript-eslint",
+    "plugin:prettier/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "plugins": ["simple-import-sort"],
+  "rules": {
+    "@typescript-eslint/array-type": "off",
+    "@typescript-eslint/ban-ts-comment": "warn",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/explicit-member-accessibility": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/interface-name-prefix": "off",
+    "@typescript-eslint/no-empty-function": "off",
+    "@typescript-eslint/no-empty-interface": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-use-before-define": "off",
+    "import/no-extraneous-dependencies": "error",
+    "import/no-named-as-default": "off",
+    "import/no-unresolved": "off",
+    "import/order": "off",
+    "no-undef": "off",
+    "react/display-name": "off",
+    "react/no-unescaped-entities": "off",
+    "react/prop-types": "off",
+    "simple-import-sort/sort": ["error", {
+      "groups": [
+        // Node.js built-in modules
+        [
+          "^(assert|buffer|child_process|cluster|console|constants|crypto|dgram|dns|domain|events|fs|http|https|module|net|os|path|punycode|querystring|readline|repl|stream|string_decoder|sys|timers|tls|tty|url|util|vm|zlib|freelist|v8|process|async_hooks|http2|perf_hooks)(/.*|$)"
+        ],
+        // External packages
+        // React comes first
+        ["^react$", "^@?\\w"],
+        // Internal packages
+        ["^(@\\w)(/.*|$)"],
+        // Side effect imports
+        ["^\\u0000"],
+        // Parent imports
+        // Put `..` last
+        ["^\\.\\.(?!/?$)", "^\\.\\./?$"],
+        // Other relative imports
+        // Put same-folder imports and `.` last
+        ["^\\./(?=.*/)(?!/?$)", "^\\.(?!/?$)", "^\\./?$"],
+        // Style imports
+        ["^.+\\.s?css$"]
+      ]
+    }]
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
+}
