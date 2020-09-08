@@ -21,7 +21,7 @@ module.exports = {
     react: "react",
   },
   plugins: [
-    new CleanWebpackPlugin(["dist"]),
+    new CleanWebpackPlugin(),
     new CopyWebpackPlugin({
       patterns: [
         {
