@@ -16,7 +16,7 @@
     "build": "npm run build:dist && npm run build:example",
     "commitmsg": "commitlint -e $GIT_PARAMS",
     "commit": "git-cz",
-    "release": "semantic-release pre && npm publish && semantic-release post"
+    "release": "semantic-release"
   },
   "repository": {
     "type": "git",
