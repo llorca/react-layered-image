@@ -1,285 +1,159 @@
-import * as React from "react";
-import { classes as classNames } from "typestyle";
+import * as React from "react"
+import { createRef, useEffect, useMemo, useRef, useState } from "react"
 
-import { default as classes } from "./classes";
-import { clamp, isFunction } from "./utils";
+import { clamp, isFunction, isSafariDesktop } from "./utils"
 
-export enum Interaction {
+interface Size {
+  width: number
+  height: number
+}
+
+enum Interaction {
   None = "NONE",
   Resize = "RESIZE",
   Hover = "HOVER",
   Active = "ACTIVE",
 }
 
-export interface ILayeredImageProps extends React.HTMLProps<HTMLDivElement> {
-  layers: Array<string>;
-  aspectRatio?: number;
-  borderRadius?: React.CSSProperties["borderRadius"];
-  transitionDuration?: React.CSSProperties["transitionDuration"];
-  transitionTimingFunction?: React.CSSProperties["transitionTimingFunction"];
-  lightColor?: React.CSSProperties["color"];
-  lightOpacity?: React.CSSProperties["opacity"];
-  shadowColor?: React.CSSProperties["color"];
-  shadowOpacity?: React.CSSProperties["opacity"];
-}
-
-export interface ILayeredImageState {
-  width?: React.CSSProperties["width"];
-  height?: React.CSSProperties["height"];
-  interaction: Interaction;
-  loaded: number;
-  error: number;
-}
-
 interface ILayeredImageStyles {
-  root?: React.CSSProperties;
-  container?: React.CSSProperties;
-  layers?: React.CSSProperties;
-  layer?: React.CSSProperties | ((index: number) => React.CSSProperties);
-  light?: React.CSSProperties;
-  shadow?: React.CSSProperties;
+  root?: React.CSSProperties
+  container?: React.CSSProperties
+  layers?: React.CSSProperties
+  layer?: React.CSSProperties | ((index: number) => React.CSSProperties)
+  light?: React.CSSProperties
+  shadow?: React.CSSProperties
 }
 
-export default class LayeredImage extends React.Component<ILayeredImageProps, ILayeredImageState> {
-  public static defaultProps: Partial<ILayeredImageProps> = {
-    aspectRatio: 16 / 10,
-    borderRadius: 6,
-    transitionDuration: 0.2,
-    transitionTimingFunction: "ease-out",
-    lightColor: "#fff",
-    lightOpacity: 0.2,
-    shadowColor: "#000",
-    shadowOpacity: 0.6,
-  };
+export interface ILayeredImageProps extends React.HTMLProps<HTMLDivElement> {
+  layers: Array<string>
+  aspectRatio?: number
+  borderRadius?: React.CSSProperties["borderRadius"]
+  transitionDuration?: number
+  transitionTimingFunction?: React.CSSProperties["transitionTimingFunction"]
+  lightColor?: React.CSSProperties["color"]
+  lightOpacity?: React.CSSProperties["opacity"]
+  shadowColor?: React.CSSProperties["color"]
+  shadowOpacity?: React.CSSProperties["opacity"]
+}
 
-  public state: ILayeredImageState = {
-    interaction: Interaction.None,
-    loaded: 0,
-    error: 0,
-  };
+export const LayeredImage: React.FC<ILayeredImageProps> = ({
+  layers,
+  aspectRatio = 16 / 10,
+  borderRadius = 12,
+  transitionDuration = 0.15,
+  transitionTimingFunction = "ease-out",
+  lightColor = "#fff",
+  lightOpacity = 0.2,
+  shadowColor = "#000",
+  shadowOpacity = 0.6,
+  className,
+  style,
+}) => {
+  const [size, setSize] = useState<Size>({ width: 0, height: 0 })
+  const [interaction, setInteraction] = useState<Interaction>(Interaction.None)
+  const [loaded, setLoaded] = useState<number>(0)
+  const [, setError] = useState<number>(0)
 
-  private elements = {
-    root: null,
-    container: null,
-    layer: [],
-    light: null,
-    shadow: null,
-  };
+  const elementsRef = useRef({
+    root: createRef<HTMLDivElement>(),
+    container: createRef<HTMLDivElement>(),
+    shadow: createRef<HTMLDivElement>(),
+    light: createRef<HTMLDivElement>(),
+  })
+  const layerRef = useRef(layers.map(() => createRef<HTMLDivElement>()))
 
-  private refHandlers = {
-    root: (element: HTMLDivElement) => (this.elements.root = element),
-    container: (element: HTMLDivElement) => (this.elements.container = element),
-    layer: (index: number) => (element: HTMLDivElement) => (this.elements.layer[index] = element),
-    light: (element: HTMLDivElement) => (this.elements.light = element),
-    shadow: (element: HTMLDivElement) => (this.elements.shadow = element),
-  };
-
-  private images: Array<HTMLImageElement> = [];
-
-  public render() {
-    const {
-      layers,
-      borderRadius,
-      transitionDuration,
-      transitionTimingFunction,
-      lightColor,
-      lightOpacity,
-      shadowColor,
-      shadowOpacity,
-      className,
-      style,
-    } = this.props;
-    const { width, loaded } = this.state;
-    const staticStyles = this.getStaticStyles();
-    const styles: ILayeredImageStyles = {
+  const defaultStyles = useMemo<ILayeredImageStyles>(
+    () => getDefaultStyles(transitionDuration, lightColor, shadowColor),
+    [transitionDuration, lightColor, shadowColor],
+  )
+  const styles = useMemo<ILayeredImageStyles>(
+    () => ({
       root: {
         borderRadius,
-        transform: `perspective(${width * 3}px)`,
+        ...defaultStyles.root,
         ...staticStyles.root,
       },
       container: {
         borderRadius,
         transitionTimingFunction,
+        ...defaultStyles.container,
         ...staticStyles.container,
       },
       layers: {
         borderRadius,
+        ...defaultStyles.layers,
         ...staticStyles.layers,
       },
       layer: {
-        transitionDuration: `${transitionDuration}s, ${transitionDuration * 3}s`,
         transitionTimingFunction,
+        ...defaultStyles.layer,
         ...staticStyles.layer,
       },
       light: {
         borderRadius,
         opacity: lightOpacity,
+        ...defaultStyles.light,
         ...staticStyles.light,
       },
       shadow: {
         borderRadius,
         opacity: shadowOpacity,
         transitionTimingFunction,
+        ...defaultStyles.shadow,
         ...staticStyles.shadow,
       },
-    };
+    }),
+    [defaultStyles, borderRadius, transitionTimingFunction, lightOpacity, shadowOpacity],
+  )
 
-    return (
-      <div
-        onMouseEnter={this.handleMouseInteraction(Interaction.Hover)}
-        onMouseMove={this.handleMouseInteraction()}
-        onMouseDown={this.handleMouseInteraction(Interaction.Active)}
-        onMouseUp={this.handleMouseInteraction(Interaction.Hover)}
-        onMouseLeave={this.handleInteractionEnd}
-        onTouchStart={this.handleTouchInteraction(Interaction.Hover)}
-        onTouchMove={this.handleTouchInteraction(Interaction.Hover)}
-        onTouchEnd={this.handleInteractionEnd}
-        className={classNames(classes.root, className)}
-        style={{ ...styles.root, ...style }}
-        ref={this.refHandlers.root}
-      >
-        <div className={classes.container} style={styles.container} ref={this.refHandlers.container}>
-          <div className={classes.shadow} style={styles.shadow} ref={this.refHandlers.shadow} />
-          <div className={classes.layers} style={styles.layers}>
-            {layers.map((src, index) => (
-              <div
-                className={classes.layer}
-                style={{
-                  backgroundImage: `url(${src})`,
-                  opacity: loaded === layers.length ? 1 : 0,
-                  ...styles.layer,
-                }}
-                ref={this.refHandlers.layer(index)}
-                key={index}
-              />
-            ))}
-          </div>
-          <div className={classes.light} style={styles.light} ref={this.refHandlers.light} />
-        </div>
-      </div>
-    );
-  }
-
-  public componentDidMount() {
-    this.props.layers.forEach(layer => {
-      const image = new Image();
-
-      image.src = layer;
-      image.onload = (event: Event) => this.setState({ loaded: this.state.loaded + 1 });
-      image.onerror = (event: ErrorEvent) => this.setState({ error: this.state.error + 1 });
-
-      this.images = [...this.images, image];
-    });
-
-    this.computeStyles({ interaction: Interaction.Resize });
-
-    window.addEventListener("resize", this.handleWindowResize);
-  }
-
-  public componentWillReceiveProps(nextProps: ILayeredImageProps) {
-    if (this.props.aspectRatio !== nextProps.aspectRatio) {
-      this.computeStyles({ interaction: Interaction.Resize, aspectRatio: nextProps.aspectRatio });
-    }
-  }
-
-  public componentWillUnmount() {
-    this.images.forEach(image => {
-      image.onerror = null;
-      image.onload = null;
-      image = null;
-    });
-
-    window.removeEventListener("resize", this.handleWindowResize);
-  }
-
-  // prettier-ignore
-  private handleMouseInteraction =
-    (interaction?: Interaction) =>
-      (event: React.MouseEvent<HTMLDivElement>) =>
-        this.computeStyles({ interaction }, event, event.pageX, event.pageY, true);
-
-  // prettier-ignore
-  private handleTouchInteraction =
-    (interaction?: Interaction) =>
-      (event: React.TouchEvent<HTMLDivElement>) =>
-        this.computeStyles({ interaction }, event, event.touches[0].pageX, event.touches[0].pageY);
-
-  private handleInteractionEnd = () => this.computeStyles({ interaction: Interaction.None });
-
-  private handleWindowResize = () => this.computeStyles({ interaction: Interaction.Resize });
-
-  private getDimensions = (
-    aspectRatio: ILayeredImageProps["aspectRatio"] = this.props.aspectRatio,
-  ): { width: number; height: number } => {
+  const getDimensions = () => {
     // prettier-ignore
     const width =
-      this.elements.container.offsetWidth ||
-      this.elements.container.clientWidth ||
-      this.elements.container.scrollWidth;
-    const height = Math.round(width / aspectRatio);
+      elementsRef.current.container.current.offsetWidth ||
+      elementsRef.current.container.current.clientWidth ||
+      elementsRef.current.container.current.scrollWidth;
+    const height = Math.round(width / aspectRatio)
 
-    return { width, height };
-  };
+    return { width, height }
+  }
 
-  private getStaticStyles = (): ILayeredImageStyles => {
-    const { transitionDuration, lightColor, shadowColor } = this.props;
-
-    return {
-      container: {
-        transform: "none",
-        transitionDuration: `${transitionDuration}s`,
-      },
-      layer: {
-        transform: "none",
-      },
-      light: {
-        backgroundImage: `linear-gradient(180deg, ${lightColor} 0%, transparent 80%)`,
-      },
-      shadow: {
-        boxShadow: `0 10px 30px ${shadowColor}, 0 6px 10px ${shadowColor}`,
-        transitionDuration: `${transitionDuration}s`,
-      },
-    };
-  };
-
-  private computeStyles = (
-    options: {
-      interaction: Interaction;
-      aspectRatio?: ILayeredImageProps["aspectRatio"];
-    },
+  const computeStyles = (
+    _interaction: Interaction = interaction,
     event?: React.SyntheticEvent<HTMLDivElement>,
     pageX?: number,
     pageY?: number,
-    preventDefault: boolean = false,
+    preventDefault = false,
   ) => {
-    const { interaction = this.state.interaction, aspectRatio } = options;
-    const { layers, transitionDuration, lightColor, shadowColor } = this.props;
-    const { width, height } = interaction === Interaction.Resize ? this.getDimensions(aspectRatio) : this.state;
-    const staticStyles = this.getStaticStyles();
+    const { width, height } = _interaction === Interaction.Resize ? getDimensions() : size
 
     const bodyScrollTop =
       document.body.scrollTop ||
       document.documentElement.scrollTop ||
       document.scrollingElement.scrollTop ||
       window.scrollY ||
-      window.pageYOffset;
-    const bodyScrollLeft = document.body.scrollLeft;
-    const containerClientRect = this.elements.container.getBoundingClientRect();
+      window.pageYOffset
+    const bodyScrollLeft =
+      document.body.scrollLeft ||
+      document.documentElement.scrollLeft ||
+      document.scrollingElement.scrollLeft ||
+      window.scrollX ||
+      window.pageXOffset
+    const containerClientRect = elementsRef.current.container.current.getBoundingClientRect()
 
-    const offsetX = (pageX - containerClientRect.left - bodyScrollLeft) / width;
-    const offsetY = (pageY - containerClientRect.top - bodyScrollTop) / height;
-    const containerCenterX = pageX - containerClientRect.left - bodyScrollLeft - width / 2;
-    const containerCenterY = pageY - containerClientRect.top - bodyScrollTop - height / 2;
+    const offsetX = (pageX - containerClientRect.left - bodyScrollLeft) / width
+    const offsetY = (pageY - containerClientRect.top - bodyScrollTop) / height
+    const containerCenterX = pageX - containerClientRect.left - bodyScrollLeft - width / 2
+    const containerCenterY = pageY - containerClientRect.top - bodyScrollTop - height / 2
 
-    const containerRotationX = (offsetY - containerCenterY) / (height / 2) * 8;
-    const containerRotationY = (containerCenterX - offsetX) / (width / 2) * 8;
-    const layerTranslationX = (offsetX - containerCenterX) * 0.01;
-    const layerTranslationY = (offsetY - containerCenterY) * 0.01;
-    const lightAngle = Math.atan2(containerCenterY, containerCenterX) * 180 / Math.PI - 90;
+    const containerRotationX = ((offsetY - containerCenterY) / (height / 2)) * 8
+    const containerRotationY = ((containerCenterX - offsetX) / (width / 2)) * 8
+    const layerTranslationX = (offsetX - containerCenterX) * 0.01
+    const layerTranslationY = (offsetY - containerCenterY) * 0.01
+    const lightAngle = (Math.atan2(containerCenterY, containerCenterX) * 180) / Math.PI - 90
 
     const computedStyles: ILayeredImageStyles = {
-      [Interaction.None]: { ...staticStyles },
-      [Interaction.Resize]: { root: { height: `${height}px` } },
+      [Interaction.None]: { ...defaultStyles },
+      [Interaction.Resize]: { root: { height: `${height}px`, transform: `perspective(${width * 3}px)` } },
       [Interaction.Hover]: {
         container: {
           transform: `rotateX(${-clamp(containerRotationX, -8, 8)}deg)
@@ -316,36 +190,186 @@ export default class LayeredImage extends React.Component<ILayeredImageProps, IL
           backgroundImage: `linear-gradient(${lightAngle}deg, ${lightColor} 0%, transparent 80%)`,
         },
         shadow: {
-          ...staticStyles.shadow,
+          ...defaultStyles.shadow,
           transitionDuration: "0.075s",
         },
       },
-    }[interaction];
+    }[_interaction]
 
     if (preventDefault) {
-      event.preventDefault();
+      event.preventDefault()
     }
 
-    Object.keys(computedStyles).forEach(element => {
-      const styles = computedStyles[element];
+    Object.keys(computedStyles).forEach((element) => {
+      const styles = computedStyles[element]
 
       if (element === "layer") {
-        this.props.layers.forEach((_, index) =>
-          this.applyStyles(this.elements.layer[index], isFunction(styles) ? styles(index) : styles),
-        );
+        layers.forEach((_, index) =>
+          applyStyles(layerRef.current[index].current, isFunction(styles) ? styles(index) : styles),
+        )
       } else {
-        this.applyStyles(this.elements[element], styles);
+        applyStyles(elementsRef.current[element].current, styles)
       }
-    });
+    })
 
-    this.setState({ width, height, interaction });
-  };
+    setSize({ width, height })
+    setInteraction(_interaction)
+  }
 
-  private applyStyles = (element: HTMLDivElement, styles: React.CSSProperties) => {
-    Object.keys(styles).forEach(style => {
+  // prettier-ignore
+  const handleMouseInteraction =
+    (_interaction?: Interaction) =>
+      (event: React.MouseEvent<HTMLDivElement>) =>
+        computeStyles(_interaction, event, event.pageX, event.pageY, true);
+
+  // prettier-ignore
+  const handleTouchInteraction =
+    (_interaction?: Interaction) =>
+      (event: React.TouchEvent<HTMLDivElement>) =>
+        computeStyles(_interaction, event, event.touches[0].pageX, event.touches[0].pageY);
+
+  const handleInteractionEnd = () => computeStyles(Interaction.None)
+
+  const handleWindowResize = () => computeStyles(Interaction.Resize)
+
+  useEffect(() => {
+    layers.forEach((layer) => {
+      const image = new Image()
+
+      image.src = layer
+      image.onload = () => setLoaded((loaded) => loaded + 1)
+      image.onerror = () => setError((error) => error + 1)
+    })
+
+    window.addEventListener("resize", handleWindowResize)
+
+    return () => {
+      window.removeEventListener("resize", handleWindowResize)
+    }
+  }, [])
+
+  useEffect(() => {
+    computeStyles(Interaction.Resize)
+  }, [elementsRef.current, aspectRatio])
+
+  return (
+    <div
+      onMouseEnter={handleMouseInteraction(Interaction.Hover)}
+      onMouseMove={handleMouseInteraction()}
+      onMouseDown={handleMouseInteraction(Interaction.Active)}
+      onMouseUp={handleMouseInteraction(Interaction.Hover)}
+      onMouseLeave={handleInteractionEnd}
+      onTouchStart={handleTouchInteraction(Interaction.Hover)}
+      onTouchMove={handleTouchInteraction(Interaction.Hover)}
+      onTouchEnd={handleInteractionEnd}
+      className={className}
+      style={{ ...styles.root, ...style }}
+      ref={elementsRef.current.root}
+    >
+      <div style={styles.container} ref={elementsRef.current.container}>
+        <div style={styles.shadow} ref={elementsRef.current.shadow} />
+        <div style={styles.layers}>
+          {layers.map((src, index) => (
+            <div
+              style={{
+                ...styles.layer,
+                backgroundImage: `url(${src})`,
+                opacity: loaded === layers.length ? 1 : 0,
+              }}
+              ref={layerRef.current[index]}
+              key={index}
+            />
+          ))}
+        </div>
+        <div style={styles.light} ref={elementsRef.current.light} />
+      </div>
+    </div>
+  )
+}
+LayeredImage.displayName = "LayeredImage"
+
+export default LayeredImage
+
+const staticStyles: ILayeredImageStyles = {
+  root: {
+    position: "relative",
+    width: "100%",
+    transformStyle: "preserve-3d",
+    cursor: "pointer",
+    WebkitTapHighlightColor: "rgba(0, 0, 0, 0)",
+  },
+  container: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    transitionProperty: "transform",
+    transformStyle: "preserve-3d",
+  },
+  layers: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    background: "black",
+    transformStyle: "preserve-3d",
+    overflow: "hidden",
+  },
+  layer: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "center",
+    backgroundColor: "transparent",
+    backgroundSize: "cover",
+    transitionProperty: "transform, opacity",
+    opacity: 0,
+  },
+  light: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+  },
+  shadow: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    transitionProperty: "transform, box-shadow",
+    transform: "translateZ(-10px) scale(0.95)",
+  },
+}
+
+const getDefaultStyles = (
+  transitionDuration: ILayeredImageProps["transitionDuration"],
+  lightColor: ILayeredImageProps["lightColor"],
+  shadowColor: ILayeredImageProps["shadowColor"],
+): ILayeredImageStyles => ({
+  container: {
+    transform: "none",
+    transitionDuration: `${transitionDuration}s`,
+  },
+  layer: {
+    transform: "none",
+    transitionDuration: `${transitionDuration}s, 500ms`,
+  },
+  light: {
+    backgroundImage: `linear-gradient(180deg, ${lightColor} 0%, transparent 80%)`,
+  },
+  shadow: {
+    boxShadow: `0 10px 30px ${shadowColor}, 0 6px 10px ${shadowColor}`,
+    transitionDuration: `${transitionDuration}s`,
+  },
+})
+
+const applyStyles = (element: HTMLDivElement, styles: React.CSSProperties) => {
+  Object.keys(styles).forEach((style) => {
+    // `requestAnimationFrame` doesn't play nice with CSS transition duration on
+    // desktop Safari
+    if (isSafariDesktop()) {
+      element.style[style] = styles[style]
+    } else {
       requestAnimationFrame(() => {
-        element.style[style] = styles[style];
-      });
-    });
-  };
+        element.style[style] = styles[style]
+      })
+    }
+  })
 }

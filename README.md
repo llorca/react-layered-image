@@ -6,7 +6,7 @@
 
 #### Features
 
-* Runs at 60fps on Chrome 54+, Firefox 49+, Safari 6.1+, Mobile Safari 6.1+
+* Runs at 60fps on Chrome 54+, Firefox 49+, Safari 6.1+
 * Preserves aspect ratio through resizing
 * Loads images asynchronously
 
@@ -60,7 +60,7 @@ directly. You can use any length or percentage value.
 | `layers`                   | `Array<string>` |              | **Required**. Array of image URLs. Use images of same dimension for best results. |
 | `aspectRatio`              | `number`        | `16 / 9`     | Aspect ratio (`width / height`) of the element.                                   |
 | `borderRadius`             | `number`        | `6`          | Radius of the element.                                                            |
-| `transitionDuration`       | `number`        | `0.2`        | Duration of the transition.                                                       |
+| `transitionDuration`       | `number`        | `0.15`        | Duration of the transition.                                                       |
 | `transitionTimingFunction` | `string`        | `"ease-out"` | Timing function of the transition.                                                |
 | `lightColor`               | `string`        | `"#fff"`     | Color of the light element.                                                       |
 | `lightOpacity`             | `number`        | `0.2`        | Opacity of the light element.                                                     |

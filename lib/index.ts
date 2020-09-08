@@ -1,4 +1,4 @@
-import LayeredImage, { ILayeredImageProps, ILayeredImageState } from "./LayeredImage";
+import LayeredImage, { ILayeredImageProps } from "./LayeredImage"
 
-export { ILayeredImageProps, ILayeredImageState };
-export default LayeredImage;
+export { ILayeredImageProps }
+export default LayeredImage
