@@ -128,17 +128,9 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
     const { width, height } = _interaction === Interaction.Resize ? getDimensions() : size
 
     const bodyScrollTop =
-      document.body.scrollTop ||
-      document.documentElement.scrollTop ||
-      document.scrollingElement.scrollTop ||
-      window.scrollY ||
-      window.pageYOffset
+      document.body.scrollTop || document.documentElement.scrollTop || document.scrollingElement.scrollTop
     const bodyScrollLeft =
-      document.body.scrollLeft ||
-      document.documentElement.scrollLeft ||
-      document.scrollingElement.scrollLeft ||
-      window.scrollX ||
-      window.pageXOffset
+      document.body.scrollLeft || document.documentElement.scrollLeft || document.scrollingElement.scrollLeft
     const containerRect = elementsRef.current.container.current.getBoundingClientRect()
 
     const offsetX = (pageX - containerRect.left - bodyScrollLeft) / width
