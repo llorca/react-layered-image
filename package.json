@@ -10,12 +10,11 @@
   ],
   "scripts": {
     "dev": "webpack-dev-server --progress --config webpack.dev.js",
-    "test": "echo \"Error: no test specified\" && exit 0",
     "build:example": "webpack --config webpack.dev.js",
     "build:dist": "webpack --config webpack.prod.js",
     "build": "npm run build:dist && npm run build:example",
     "commitmsg": "commitlint -e $GIT_PARAMS",
-    "commit": "git-cz",
+    "commit": "cz",
     "release": "semantic-release"
   },
   "repository": {
@@ -44,7 +43,7 @@
     "commitizen": "^4.2.1",
     "copy-webpack-plugin": "^6.1.0",
     "cz-conventional-changelog": "^3.3.0",
-    "eslint": "^7.8.1",
+    "eslint": "^7.9.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-import": "^2.22.0",
     "eslint-plugin-prettier": "^3.1.4",
