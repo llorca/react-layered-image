@@ -1,7 +1,7 @@
 import * as React from "react"
 import { render } from "react-dom"
 
-import LayeredImage from "../lib"
+import { LayeredImage } from "../lib"
 
 const style: React.CSSProperties = {
   position: "absolute",

@@ -22,7 +22,7 @@ npm install react-layered-image
 import * as React from "react";
 import { render } from "react-dom";
 
-import LayeredImage from "react-layered-image";
+import { LayeredImage } from "react-layered-image";
 
 const style = {
   position: "absolute",

@@ -1,4 +1,3 @@
-import LayeredImage, { ILayeredImageProps } from "./LayeredImage"
+import { ILayeredImageProps, LayeredImage } from "./LayeredImage"
 
-export { ILayeredImageProps }
-export default LayeredImage
+export { ILayeredImageProps, LayeredImage }

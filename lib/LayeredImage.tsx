@@ -1,7 +1,7 @@
 import * as React from "react"
 import { createRef, useEffect, useMemo, useRef, useState } from "react"
 
-import { clamp, isFunction, isSafariDesktop } from "./utils"
+import { applyStyles, clamp, isFunction } from "./utils"
 
 interface Size {
   width: number
@@ -18,7 +18,7 @@ enum Interaction {
 interface ILayeredImageStyles {
   root?: React.CSSProperties
   container?: React.CSSProperties
-  layers?: React.CSSProperties
+  stack?: React.CSSProperties
   layer?: React.CSSProperties | ((index: number) => React.CSSProperties)
   light?: React.CSSProperties
   shadow?: React.CSSProperties
@@ -57,10 +57,10 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
   const elementsRef = useRef({
     root: createRef<HTMLDivElement>(),
     container: createRef<HTMLDivElement>(),
+    layers: layers.map(() => createRef<HTMLDivElement>()),
     shadow: createRef<HTMLDivElement>(),
     light: createRef<HTMLDivElement>(),
   })
-  const layerRef = useRef(layers.map(() => createRef<HTMLDivElement>()))
 
   const defaultStyles = useMemo<ILayeredImageStyles>(
     () => getDefaultStyles(transitionDuration, lightColor, shadowColor),
@@ -79,10 +79,10 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
         ...defaultStyles.container,
         ...staticStyles.container,
       },
-      layers: {
+      stack: {
         borderRadius,
-        ...defaultStyles.layers,
-        ...staticStyles.layers,
+        ...defaultStyles.stack,
+        ...staticStyles.stack,
       },
       layer: {
         transitionTimingFunction,
@@ -107,11 +107,12 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
   )
 
   const getDimensions = () => {
+    const containerRef = elementsRef.current.container
     // prettier-ignore
     const width =
-      elementsRef.current.container.current.offsetWidth ||
-      elementsRef.current.container.current.clientWidth ||
-      elementsRef.current.container.current.scrollWidth;
+      containerRef.current.offsetWidth ||
+      containerRef.current.clientWidth ||
+      containerRef.current.scrollWidth;
     const height = Math.round(width / aspectRatio)
 
     return { width, height }
@@ -138,12 +139,12 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
       document.scrollingElement.scrollLeft ||
       window.scrollX ||
       window.pageXOffset
-    const containerClientRect = elementsRef.current.container.current.getBoundingClientRect()
+    const containerRect = elementsRef.current.container.current.getBoundingClientRect()
 
-    const offsetX = (pageX - containerClientRect.left - bodyScrollLeft) / width
-    const offsetY = (pageY - containerClientRect.top - bodyScrollTop) / height
-    const containerCenterX = pageX - containerClientRect.left - bodyScrollLeft - width / 2
-    const containerCenterY = pageY - containerClientRect.top - bodyScrollTop - height / 2
+    const offsetX = (pageX - containerRect.left - bodyScrollLeft) / width
+    const offsetY = (pageY - containerRect.top - bodyScrollTop) / height
+    const containerCenterX = pageX - containerRect.left - bodyScrollLeft - width / 2
+    const containerCenterY = pageY - containerRect.top - bodyScrollTop - height / 2
 
     const containerRotationX = ((offsetY - containerCenterY) / (height / 2)) * 8
     const containerRotationY = ((containerCenterX - offsetX) / (width / 2)) * 8
@@ -152,8 +153,13 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
     const lightAngle = (Math.atan2(containerCenterY, containerCenterX) * 180) / Math.PI - 90
 
     const computedStyles: ILayeredImageStyles = {
-      [Interaction.None]: { ...defaultStyles },
-      [Interaction.Resize]: { root: { height: `${height}px`, transform: `perspective(${width * 3}px)` } },
+      [Interaction.None]: defaultStyles,
+      [Interaction.Resize]: {
+        root: {
+          height: `${height}px`,
+          transform: `perspective(${width * 3}px)`,
+        },
+      },
       [Interaction.Hover]: {
         container: {
           transform: `rotateX(${-clamp(containerRotationX, -8, 8)}deg)
@@ -176,10 +182,10 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
       },
       [Interaction.Active]: {
         container: {
+          transitionDuration: "0.075s",
           transform: `rotateX(${containerRotationX / 1.4}deg)
                       rotateY(${containerRotationY / 1.4}deg)
                       scale(1)`,
-          transitionDuration: "0.075s",
         },
         layer: (index: number) => ({
           transform: `translateX(${-layerTranslationX * index}px)
@@ -200,17 +206,15 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
       event.preventDefault()
     }
 
-    Object.keys(computedStyles).forEach((element) => {
-      const styles = computedStyles[element]
-
+    for (const [element, styles] of Object.entries(computedStyles)) {
       if (element === "layer") {
         layers.forEach((_, index) =>
-          applyStyles(layerRef.current[index].current, isFunction(styles) ? styles(index) : styles),
+          applyStyles(elementsRef.current.layers[index].current, isFunction(styles) ? styles(index) : styles),
         )
       } else {
         applyStyles(elementsRef.current[element].current, styles)
       }
-    })
+    }
 
     setSize({ width, height })
     setInteraction(_interaction)
@@ -230,9 +234,9 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
 
   const handleInteractionEnd = () => computeStyles(Interaction.None)
 
-  const handleWindowResize = () => computeStyles(Interaction.Resize)
-
   useEffect(() => {
+    const handleWindowResize = () => computeStyles(Interaction.Resize)
+
     layers.forEach((layer) => {
       const image = new Image()
 
@@ -268,7 +272,7 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
     >
       <div style={styles.container} ref={elementsRef.current.container}>
         <div style={styles.shadow} ref={elementsRef.current.shadow} />
-        <div style={styles.layers}>
+        <div style={styles.stack}>
           {layers.map((src, index) => (
             <div
               style={{
@@ -276,7 +280,7 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
                 backgroundImage: `url(${src})`,
                 opacity: loaded === layers.length ? 1 : 0,
               }}
-              ref={layerRef.current[index]}
+              ref={elementsRef.current.layers[index]}
               key={index}
             />
           ))}
@@ -288,8 +292,34 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
 }
 LayeredImage.displayName = "LayeredImage"
 
-export default LayeredImage
+/*
+ * Initial styles in resting state.
+ */
+const getDefaultStyles = (
+  transitionDuration: ILayeredImageProps["transitionDuration"],
+  lightColor: ILayeredImageProps["lightColor"],
+  shadowColor: ILayeredImageProps["shadowColor"],
+): ILayeredImageStyles => ({
+  container: {
+    transform: "none",
+    transitionDuration: `${transitionDuration}s`,
+  },
+  layer: {
+    transform: "none",
+    transitionDuration: `${transitionDuration}s, 500ms`,
+  },
+  light: {
+    backgroundImage: `linear-gradient(180deg, ${lightColor} 0%, transparent 80%)`,
+  },
+  shadow: {
+    boxShadow: `0 10px 30px ${shadowColor}, 0 6px 10px ${shadowColor}`,
+    transitionDuration: `${transitionDuration}s`,
+  },
+})
 
+/*
+ * Static styles that never change.
+ */
 const staticStyles: ILayeredImageStyles = {
   root: {
     position: "relative",
@@ -305,7 +335,7 @@ const staticStyles: ILayeredImageStyles = {
     transitionProperty: "transform",
     transformStyle: "preserve-3d",
   },
-  layers: {
+  stack: {
     position: "absolute",
     width: "100%",
     height: "100%",
@@ -336,40 +366,4 @@ const staticStyles: ILayeredImageStyles = {
     transitionProperty: "transform, box-shadow",
     transform: "translateZ(-10px) scale(0.95)",
   },
-}
-
-const getDefaultStyles = (
-  transitionDuration: ILayeredImageProps["transitionDuration"],
-  lightColor: ILayeredImageProps["lightColor"],
-  shadowColor: ILayeredImageProps["shadowColor"],
-): ILayeredImageStyles => ({
-  container: {
-    transform: "none",
-    transitionDuration: `${transitionDuration}s`,
-  },
-  layer: {
-    transform: "none",
-    transitionDuration: `${transitionDuration}s, 500ms`,
-  },
-  light: {
-    backgroundImage: `linear-gradient(180deg, ${lightColor} 0%, transparent 80%)`,
-  },
-  shadow: {
-    boxShadow: `0 10px 30px ${shadowColor}, 0 6px 10px ${shadowColor}`,
-    transitionDuration: `${transitionDuration}s`,
-  },
-})
-
-const applyStyles = (element: HTMLDivElement, styles: React.CSSProperties) => {
-  Object.keys(styles).forEach((style) => {
-    // `requestAnimationFrame` doesn't play nice with CSS transition duration on
-    // desktop Safari
-    if (isSafariDesktop()) {
-      element.style[style] = styles[style]
-    } else {
-      requestAnimationFrame(() => {
-        element.style[style] = styles[style]
-      })
-    }
-  })
 }
