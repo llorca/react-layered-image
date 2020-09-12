@@ -1,7 +1,7 @@
 import * as React from "react"
 import { createRef, useEffect, useMemo, useRef, useState } from "react"
 
-import { applyStyles, clamp, isFunction } from "./utils"
+import { applyStyles, clamp, isBrowser, isFunction } from "./utils"
 
 interface Size {
   width: number
@@ -125,12 +125,24 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
     pageY?: number,
     preventDefault = false,
   ) => {
+    if (!isBrowser) {
+      return
+    }
+
     const { width, height } = _interaction === Interaction.Resize ? getDimensions() : size
 
     const bodyScrollTop =
-      document.body.scrollTop || document.documentElement.scrollTop || document.scrollingElement.scrollTop
+      document.body.scrollTop ||
+      document.documentElement.scrollTop ||
+      document.scrollingElement.scrollTop ||
+      window.scrollY ||
+      window.pageYOffset
     const bodyScrollLeft =
-      document.body.scrollLeft || document.documentElement.scrollLeft || document.scrollingElement.scrollLeft
+      document.body.scrollLeft ||
+      document.documentElement.scrollLeft ||
+      document.scrollingElement.scrollLeft ||
+      window.scrollX ||
+      window.pageXOffset
     const containerRect = elementsRef.current.container.current.getBoundingClientRect()
 
     const offsetX = (pageX - containerRect.left - bodyScrollLeft) / width

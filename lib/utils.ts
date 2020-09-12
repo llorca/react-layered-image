@@ -17,6 +17,11 @@ export const clamp = (value: number, min: number, max: number) => {
 }
 
 /**
+ * Check whether the code is running in the browser.
+ */
+export const isBrowser = typeof window !== "undefined" && typeof window.document !== "undefined"
+
+/**
  * Return `true` if the value is a `function`.
  */
 // eslint-disable-next-line @typescript-eslint/ban-types
