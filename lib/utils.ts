@@ -3,13 +3,7 @@
  */
 export const applyStyles = (element: HTMLDivElement, styles: React.CSSProperties) => {
   for (const [style, value] of Object.entries(styles)) {
-    if (isSafariDesktop()) {
-      element.style[style] = value
-    } else {
-      requestAnimationFrame(() => {
-        element.style[style] = value
-      })
-    }
+    element.style[style] = value
   }
 }
 
@@ -27,12 +21,3 @@ export const clamp = (value: number, min: number, max: number) => {
  */
 // eslint-disable-next-line @typescript-eslint/ban-types
 export const isFunction = (value: unknown): value is Function => typeof value === "function"
-
-/**
- * Detect whether the current browser is a desktop version of Safari.
- */
-export const isSafariDesktop = () => {
-  const { userAgent, vendor } = navigator
-
-  return /Safari/i.test(userAgent) && /Apple Computer/.test(vendor) && !/Mobi|Android/i.test(userAgent)
-}
