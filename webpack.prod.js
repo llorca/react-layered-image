@@ -15,6 +15,7 @@ module.exports = {
     filename: "index.js",
     library: "react-layered-image",
     libraryTarget: "umd",
+    globalObject: "this",
   },
   devtool: "source-map",
   externals: {

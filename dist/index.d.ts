@@ -11,4 +11,3 @@ export interface ILayeredImageProps extends React.HTMLProps<HTMLDivElement> {
   shadowOpacity?: React.CSSProperties["opacity"]
 }
 export declare const LayeredImage: React.FC<ILayeredImageProps>
-export default LayeredImage

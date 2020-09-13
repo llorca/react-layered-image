@@ -8,11 +8,6 @@ interface Size {
   height: number
 }
 
-interface Position {
-  x: number
-  y: number
-}
-
 enum Interaction {
   None = "NONE",
   Resize = "RESIZE",
@@ -55,7 +50,6 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
   style,
 }) => {
   const [size, setSize] = useState<Size>({ width: 0, height: 0 })
-  const [scrollPosition, setScrollPosition] = useState<Position>({ x: 0, y: 0 })
   const [interaction, setInteraction] = useState<Interaction>(Interaction.None)
   const [loaded, setLoaded] = useState<number>(0)
   const [, setError] = useState<number>(0)
@@ -132,7 +126,18 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
     preventDefault = false,
   ) => {
     const { width, height } = _interaction === Interaction.Resize ? getDimensions() : size
-    const { x: scrollLeft, y: scrollTop } = scrollPosition
+
+    const scrollLeft =
+      document.documentElement.scrollLeft ||
+      document.scrollingElement.scrollLeft ||
+      window.scrollX ||
+      window.pageXOffset
+    // prettier-ignore
+    const scrollTop =
+      document.documentElement.scrollTop ||
+      document.scrollingElement.scrollTop ||
+      window.scrollY ||
+      window.pageYOffset
 
     const containerRect = elementsRef.current.container.current.getBoundingClientRect()
 
@@ -231,20 +236,6 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
 
   useEffect(() => {
     const handleWindowResize = () => computeStyles(Interaction.Resize)
-    const handleWindowScroll = () => {
-      setScrollPosition({
-        x:
-          document.documentElement.scrollLeft ||
-          document.scrollingElement.scrollLeft ||
-          window.scrollX ||
-          window.pageXOffset,
-        y:
-          document.documentElement.scrollTop ||
-          document.scrollingElement.scrollTop ||
-          window.scrollY ||
-          window.pageYOffset,
-      })
-    }
 
     layers.forEach((layer) => {
       const image = new Image()
@@ -255,11 +246,9 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
     })
 
     window.addEventListener("resize", handleWindowResize)
-    window.addEventListener("scroll", handleWindowScroll)
 
     return () => {
       window.removeEventListener("resize", handleWindowResize)
-      window.removeEventListener("scroll", handleWindowScroll)
     }
   }, [])
 
