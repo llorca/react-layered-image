@@ -125,103 +125,101 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
     pageY?: number,
     preventDefault = false,
   ) => {
-    if (!isBrowser) {
-      return
-    }
+    if (isBrowser) {
+      const { width, height } = _interaction === Interaction.Resize ? getDimensions() : size
 
-    const { width, height } = _interaction === Interaction.Resize ? getDimensions() : size
+      const bodyScrollTop =
+        document.body.scrollTop ||
+        document.documentElement.scrollTop ||
+        document.scrollingElement.scrollTop ||
+        window.scrollY ||
+        window.pageYOffset
+      const bodyScrollLeft =
+        document.body.scrollLeft ||
+        document.documentElement.scrollLeft ||
+        document.scrollingElement.scrollLeft ||
+        window.scrollX ||
+        window.pageXOffset
+      const containerRect = elementsRef.current.container.current.getBoundingClientRect()
 
-    const bodyScrollTop =
-      document.body.scrollTop ||
-      document.documentElement.scrollTop ||
-      document.scrollingElement.scrollTop ||
-      window.scrollY ||
-      window.pageYOffset
-    const bodyScrollLeft =
-      document.body.scrollLeft ||
-      document.documentElement.scrollLeft ||
-      document.scrollingElement.scrollLeft ||
-      window.scrollX ||
-      window.pageXOffset
-    const containerRect = elementsRef.current.container.current.getBoundingClientRect()
+      const offsetX = (pageX - containerRect.left - bodyScrollLeft) / width
+      const offsetY = (pageY - containerRect.top - bodyScrollTop) / height
+      const containerCenterX = pageX - containerRect.left - bodyScrollLeft - width / 2
+      const containerCenterY = pageY - containerRect.top - bodyScrollTop - height / 2
 
-    const offsetX = (pageX - containerRect.left - bodyScrollLeft) / width
-    const offsetY = (pageY - containerRect.top - bodyScrollTop) / height
-    const containerCenterX = pageX - containerRect.left - bodyScrollLeft - width / 2
-    const containerCenterY = pageY - containerRect.top - bodyScrollTop - height / 2
+      const containerRotationX = ((offsetY - containerCenterY) / (height / 2)) * 8
+      const containerRotationY = ((containerCenterX - offsetX) / (width / 2)) * 8
+      const layerTranslationX = (offsetX - containerCenterX) * 0.01
+      const layerTranslationY = (offsetY - containerCenterY) * 0.01
+      const lightAngle = (Math.atan2(containerCenterY, containerCenterX) * 180) / Math.PI - 90
 
-    const containerRotationX = ((offsetY - containerCenterY) / (height / 2)) * 8
-    const containerRotationY = ((containerCenterX - offsetX) / (width / 2)) * 8
-    const layerTranslationX = (offsetX - containerCenterX) * 0.01
-    const layerTranslationY = (offsetY - containerCenterY) * 0.01
-    const lightAngle = (Math.atan2(containerCenterY, containerCenterX) * 180) / Math.PI - 90
-
-    const computedStyles: ILayeredImageStyles = {
-      [Interaction.None]: defaultStyles,
-      [Interaction.Resize]: {
-        root: {
-          height: `${height}px`,
-          transform: `perspective(${width * 3}px)`,
+      const computedStyles: ILayeredImageStyles = {
+        [Interaction.None]: defaultStyles,
+        [Interaction.Resize]: {
+          root: {
+            height: `${height}px`,
+            transform: `perspective(${width * 3}px)`,
+          },
         },
-      },
-      [Interaction.Hover]: {
-        container: {
-          transform: `rotateX(${-clamp(containerRotationX, -8, 8)}deg)
+        [Interaction.Hover]: {
+          container: {
+            transform: `rotateX(${-clamp(containerRotationX, -8, 8)}deg)
                       rotateY(${-clamp(containerRotationY, -8, 8)}deg)
                       translateX(${-layerTranslationX * 5}px)
                       translateY(${-layerTranslationY * 5}px)
                       scale(1.1)`,
-        },
-        layer: (index: number) => ({
-          transform: `translateX(${clamp(layerTranslationX, -2, 2) * 1.4 * index}px)
+          },
+          layer: (index: number) => ({
+            transform: `translateX(${clamp(layerTranslationX, -2, 2) * 1.4 * index}px)
                       translateY(${clamp(layerTranslationY, -2, 2) * 1.4 * index}px)
                       scale(1.04)`,
-        }),
-        light: {
-          backgroundImage: `linear-gradient(${lightAngle}deg, ${lightColor} 0%, transparent 80%)`,
+          }),
+          light: {
+            backgroundImage: `linear-gradient(${lightAngle}deg, ${lightColor} 0%, transparent 80%)`,
+          },
+          shadow: {
+            boxShadow: `0 40px 100px ${shadowColor}, 0 10px 20px ${shadowColor}`,
+          },
         },
-        shadow: {
-          boxShadow: `0 40px 100px ${shadowColor}, 0 10px 20px ${shadowColor}`,
-        },
-      },
-      [Interaction.Active]: {
-        container: {
-          transitionDuration: "0.075s",
-          transform: `rotateX(${containerRotationX / 1.4}deg)
+        [Interaction.Active]: {
+          container: {
+            transitionDuration: "0.075s",
+            transform: `rotateX(${containerRotationX / 1.4}deg)
                       rotateY(${containerRotationY / 1.4}deg)
                       scale(1)`,
-        },
-        layer: (index: number) => ({
-          transform: `translateX(${-layerTranslationX * index}px)
+          },
+          layer: (index: number) => ({
+            transform: `translateX(${-layerTranslationX * index}px)
                       translateY(${-layerTranslationY * index}px)
                       scale(1.02)`,
-        }),
-        light: {
-          backgroundImage: `linear-gradient(${lightAngle}deg, ${lightColor} 0%, transparent 80%)`,
+          }),
+          light: {
+            backgroundImage: `linear-gradient(${lightAngle}deg, ${lightColor} 0%, transparent 80%)`,
+          },
+          shadow: {
+            ...defaultStyles.shadow,
+            transitionDuration: "0.075s",
+          },
         },
-        shadow: {
-          ...defaultStyles.shadow,
-          transitionDuration: "0.075s",
-        },
-      },
-    }[_interaction]
+      }[_interaction]
 
-    if (preventDefault) {
-      event.preventDefault()
-    }
-
-    for (const [element, styles] of Object.entries(computedStyles)) {
-      if (element === "layer") {
-        layers.forEach((_, index) =>
-          applyStyles(elementsRef.current.layers[index].current, isFunction(styles) ? styles(index) : styles),
-        )
-      } else {
-        applyStyles(elementsRef.current[element].current, styles)
+      if (preventDefault) {
+        event.preventDefault()
       }
-    }
 
-    setSize({ width, height })
-    setInteraction(_interaction)
+      for (const [element, styles] of Object.entries(computedStyles)) {
+        if (element === "layer") {
+          layers.forEach((_, index) =>
+            applyStyles(elementsRef.current.layers[index].current, isFunction(styles) ? styles(index) : styles),
+          )
+        } else {
+          applyStyles(elementsRef.current[element].current, styles)
+        }
+      }
+
+      setSize({ width, height })
+      setInteraction(_interaction)
+    }
   }
 
   // prettier-ignore
