@@ -49,8 +49,8 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
   className,
   style,
 }) => {
-  const [size, setSize] = useState<Size>({ width: 0, height: 0 })
   const interactionRef = useRef<Interaction>(Interaction.None)
+  const [size, setSize] = useState<Size>({ width: 0, height: 0 })
   const [loaded, setLoaded] = useState<number>(0)
   const [, setError] = useState<number>(0)
 
