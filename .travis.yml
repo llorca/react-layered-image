@@ -5,8 +5,8 @@ cache:
 notifications:
   email: false
 node_js:
-  - '12'
-  - '10'
+  - "12"
+  - "10"
 script:
   - npm run build
 after_success:
@@ -17,7 +17,7 @@ deploy:
   github_token: $GH_TOKEN
   local_dir: ./example/build
   on:
-    branch: master
+    branch: main
 branches:
   except:
     - /^v\d+\.\d+\.\d+$/
