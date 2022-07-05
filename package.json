@@ -1,7 +1,7 @@
 {
   "name": "react-layered-image",
   "description": "An interactive, multi-layer image component for React",
-  "version": "2.0.8",
+  "version": "2.0.9",
   "author": "Antoine Llorca",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,7 +15,7 @@
     "build": "npm run build:dist && npm run build:example",
     "commitmsg": "commitlint -e $GIT_PARAMS",
     "commit": "cz",
-    "release": "semantic-release"
+    "release": "npm run build && semantic-release"
   },
   "repository": {
     "type": "git",
