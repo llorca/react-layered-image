@@ -16,7 +16,7 @@ module.exports = {
     globalObject: "this",
   },
   devServer: {
-    contentBase: "./example/build",
+    static: "./example/build",
     host: "0.0.0.0",
     port: 8080,
   },
