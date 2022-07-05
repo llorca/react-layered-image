@@ -50,7 +50,7 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
   style,
 }) => {
   const [size, setSize] = useState<Size>({ width: 0, height: 0 })
-  const [interaction, setInteraction] = useState<Interaction>(Interaction.None)
+  const interactionRef = useRef<Interaction>(Interaction.None)
   const [loaded, setLoaded] = useState<number>(0)
   const [, setError] = useState<number>(0)
 
@@ -119,13 +119,13 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
   }
 
   const computeStyles = (
-    _interaction: Interaction = interaction,
+    interaction: Interaction = interactionRef.current,
     event?: React.SyntheticEvent<HTMLDivElement>,
     pageX?: number,
     pageY?: number,
     preventDefault = false,
   ) => {
-    const { width, height } = _interaction === Interaction.Resize ? getDimensions() : size
+    const { width, height } = interaction === Interaction.Resize ? getDimensions() : size
 
     const scrollLeft =
       document.documentElement.scrollLeft ||
@@ -200,7 +200,7 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
           transitionDuration: "0.075s",
         },
       },
-    }[_interaction]
+    }[interaction]
 
     if (preventDefault) {
       event.preventDefault()
@@ -216,21 +216,24 @@ export const LayeredImage: React.FC<ILayeredImageProps> = ({
       }
     }
 
-    setSize({ width, height })
-    setInteraction(_interaction)
+    if (interaction === Interaction.Resize) {
+      setSize({ width, height })
+    }
+
+    interactionRef.current = interaction
   }
 
   // prettier-ignore
   const handleMouseInteraction =
-    (_interaction?: Interaction) =>
+    (interaction?: Interaction) =>
       (event: React.MouseEvent<HTMLDivElement>) =>
-        computeStyles(_interaction, event, event.pageX, event.pageY, true);
+        computeStyles(interaction, event, event.pageX, event.pageY, true);
 
   // prettier-ignore
   const handleTouchInteraction =
-    (_interaction?: Interaction) =>
+    (interaction?: Interaction) =>
       (event: React.TouchEvent<HTMLDivElement>) =>
-        computeStyles(_interaction, event, event.touches[0].pageX, event.touches[0].pageY);
+        computeStyles(interaction, event, event.touches[0].pageX, event.touches[0].pageY);
 
   const handleInteractionEnd = () => computeStyles(Interaction.None)
 

@@ -3,13 +3,7 @@
  */
 export const applyStyles = (element: HTMLDivElement, styles: React.CSSProperties) => {
   for (const [style, value] of Object.entries(styles)) {
-    if (isSafariDesktop()) {
-      element.style[style] = value
-    } else {
-      requestAnimationFrame(() => {
-        element.style[style] = value
-      })
-    }
+    element.style[style] = value
   }
 }
 
